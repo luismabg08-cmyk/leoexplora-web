@@ -1,0 +1,69 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Connect TikTok · Leo Explora</title><link rel="icon" href="/leoexplora-web/img/leo.png"><link rel="stylesheet" href="/leoexplora-web/estilo.css">
+<style>
+.boton{display:inline-flex;align-items:center;gap:10px;background:#000;color:#fff;border:2px solid #fff;border-radius:999px;padding:14px 26px;font-weight:800;font-size:18px;text-decoration:none;cursor:pointer}
+.boton:hover{background:#111}.ok{color:#7dff9a}.codigo{font-family:ui-monospace,monospace;background:#0d1b33;border:1px dashed #ffd23f;border-radius:8px;padding:12px;word-break:break-all;color:#fff;margin:10px 0}
+.pasos li{margin:6px 0}.oculto{display:none}
+</style></head><body><main>
+<header><img src="/leoexplora-web/img/leo.png" alt="Leo"><a href="/leoexplora-web/">LEO <span>EXPLORA</span></a></header>
+
+<div class="carta" id="inicio">
+  <h1>Connect your TikTok account</h1>
+  <p>Leo Explora publishes its own daily pixel-art fun-fact videos to the owner's TikTok account. Connect the account to allow posting.</p>
+  <p lang="es"><em>Conecta la cuenta de TikTok de Leo Explora para que los vídeos diarios se publiquen solos.</em></p>
+  <ul class="pasos">
+    <li>✅ Read basic profile info (to confirm the right account)</li>
+    <li>✅ Post videos to your TikTok profile</li>
+    <li>✅ Send videos to your TikTok inbox as drafts</li>
+  </ul>
+  <p><a class="boton" id="conectar" href="#">♪ Connect TikTok</a></p>
+</div>
+
+<div class="carta oculto" id="vuelta">
+  <h1 class="ok">✅ TikTok connected</h1>
+  <p>Authorization received. Copy this one-time code to finish the connection on the publishing server (GitHub → Actions → <strong>Conectar TikTok</strong> → Run workflow):</p>
+  <div class="codigo" id="codigo"></div>
+  <p><button class="boton" id="copiar">Copy code</button></p>
+  <p lang="es"><em>Copia este código y pégalo en GitHub → Actions → «Conectar TikTok» → Run workflow. Caduca en unos minutos.</em></p>
+</div>
+
+<div class="carta oculto" id="error">
+  <h1>Connection failed</h1><p id="detalle"></p><p><a class="boton" href="/leoexplora-web/tiktok/">Try again</a></p>
+</div>
+
+<nav><a href="/leoexplora-web/">Inicio</a><a href="/leoexplora-web/privacidad/">Privacidad / Privacy</a><a href="/leoexplora-web/terminos/">Términos / Terms</a></nav>
+</main>
+<script>
+const CLIENT_KEY = "sbawgbkv0dljgyx2u6";
+const REDIRECT = "https://luismabg08-cmyk.github.io/leoexplora-web/tiktok/";
+const SCOPES = "user.info.basic,video.publish,video.upload";
+const q = new URLSearchParams(location.search);
+const ver = id => document.getElementById(id).classList.remove("oculto");
+const ocultar = id => document.getElementById(id).classList.add("oculto");
+let guardado = null;
+try { guardado = sessionStorage.getItem("tiktok_state"); } catch (e) {}
+if (q.get("code")) {
+  ocultar("inicio");
+  if (guardado && q.get("state") !== guardado) {
+    ver("error"); document.getElementById("detalle").textContent = "Security check failed (state mismatch).";
+  } else {
+    ver("vuelta"); document.getElementById("codigo").textContent = q.get("code");
+  }
+} else if (q.get("error")) {
+  ocultar("inicio"); ver("error");
+  document.getElementById("detalle").textContent = (q.get("error_description") || q.get("error"));
+}
+document.getElementById("conectar").addEventListener("click", ev => {
+  ev.preventDefault();
+  const state = Math.random().toString(36).slice(2) + Date.now().toString(36);
+  try { sessionStorage.setItem("tiktok_state", state); } catch (e) {}
+  const url = "https://www.tiktok.com/v2/auth/authorize/?" + new URLSearchParams({
+    client_key: CLIENT_KEY, scope: SCOPES, response_type: "code", redirect_uri: REDIRECT, state
+  });
+  location.href = url;
+});
+document.getElementById("copiar").addEventListener("click", async () => {
+  try { await navigator.clipboard.writeText(document.getElementById("codigo").textContent);
+        document.getElementById("copiar").textContent = "Copied ✓"; } catch (e) {}
+});
+</script></body></html>
